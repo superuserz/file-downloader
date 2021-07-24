@@ -1,6 +1,7 @@
 package com.file.downloader.controller;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.FileSystems;
@@ -34,8 +35,14 @@ public class AIRFIleController {
 	@Value("${airfile.resource.wildcard:file:E:/GroupIT_AIR/*/*.AIR}")
 	private String resourceWildcard;
 	
-	@Value("${air.file.separator:/}")
-	private String fileSeparator;
+	@Value("${air.file.linux.separator:/}")
+	private String linuxFileSeparator;
+	
+	@Value("${air.file.windows.separator:\\}")
+	private String windowsFileSeparator;
+	
+	@Value("${air.file.path:E:/GroupIT_AIR/}")
+	private String airFilePath;
 	
 	@GetMapping("/download")
 	public void download(@RequestParam String path, HttpServletResponse response) throws IOException {
@@ -63,9 +70,36 @@ public class AIRFIleController {
 		//file:/E:/GroupIT_AIR/KRFZ3I/KRFZ3I_20210708143232.AIR
 		for(Resource resource : resources) {
 			String path = resource.getURI().toString();
-			String fileSystemResourcePath = path.substring(path.indexOf(fileSeparator)+1);
-			airFileDetails.add(new AirFileDetail(path.substring(path.lastIndexOf(fileSeparator)+1),fileSystemResourcePath));
+			System.out.println("path " + path);
+			String fileSystemResourcePath = path.substring(path.indexOf(linuxFileSeparator)+1);
+			System.out.println("fileSystemResourcePath " + fileSystemResourcePath);
+			airFileDetails.add(new AirFileDetail(path.substring(path.lastIndexOf(linuxFileSeparator)+1),fileSystemResourcePath));
 		}
+		return airFileDetails;
+		
+	}
+	
+	
+	@GetMapping("/list-air-files2/{recordLocator}")
+	public List<AirFileDetail> getAIRFiles2(@PathVariable String recordLocator) throws IOException {
+
+		List<AirFileDetail> airFileDetails = new ArrayList<>();
+		File folder = new File(airFilePath+recordLocator);
+		
+		File[] files = folder.listFiles();
+		 
+		for (File file : files)
+		{
+		    System.out.println(file.getName());
+		    System.out.println(file.getAbsolutePath());
+		    System.out.println(file.getCanonicalPath());
+		    
+		    System.out.println("----------------------");
+		    
+		    airFileDetails.add(new AirFileDetail(file.getName(),file.getPath().replace(windowsFileSeparator, linuxFileSeparator)));
+		    System.out.println(airFileDetails);
+		}
+		
 		return airFileDetails;
 		
 	}
